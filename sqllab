@@ -1,0 +1,280 @@
+
+SELECT
+
+Task – Select all records from the Employee table.
+SELECT * from employees;
+
+Task – Select all records from the Employee table where last name is King.
+SELECT * FROM employees
+WHERE last_name = 'King'
+
+Task – Select all records from the Employee table where first name is Andrew and REPORTSTO is NULL.
+SELECT * FROM employees
+WHERE (first_name = 'Andrew') AND (reports_to IS NULL)
+
+
+
+2:.2 ORDER BY
+
+
+Task – Select all albums in Album table and sort result set in descending order by title.
+SELECT * FROM albums
+ORDER BY title DESC;
+
+Task – Select first name from Customer and sort result set in ascending order by city
+SELECT first_name FROM customers
+ORDER BY city ASC;
+
+2.3 INSERT INTO
+
+
+Task – Insert two new records into Genre table
+INSERT INTO genres (id, name)
+VALUES (26, 'Rock and Roll'),(27, 'Folk'),
+VALUES (26, 'Rock and Roll'),(27, 'Folk');
+
+Task – Insert two new records into Employee table
+Insert into employees (id, last_name, first_name, title, reports_to, birth_date, hire_date, address, city, state, country, postal_code, phone, fax, email)
+VALUES (9, 'Beck', 'Anna', 'Bank Teller', 1, null, null, null, null, null, null, null, null, null, null),
+VALUES (10, 'Beck', 'Anna', 'Bank Teller', 1, null, null, null, null, null, null, null, null, null, null);
+
+Task – Insert two new records into Customer table
+Insert into customers (id, first_name, last_name, company, address, city, state, country, postal_code, phone, fax, email, support_rep_id)
+    values (90, 'jimmy', 'jimmy', null, null, null, null, null, null, null, null, 'a@gmail.com', null), (70, 'cory', 'cory', null, null, null, null, null, null, null, null, 'b@gmail.com', null);
+
+2.4 UPDATE
+
+Task – Update Aaron Mitchell in Customer table to Robert Walter
+update  customers
+set first_name ='Robert' , last_name= 'Walter'
+where first_name='Aaron' AND last_name='Mitchell';
+
+Task – Update name of artist in the Artist table “Creedence Clearwater Revival” to “CCR”
+update  artists
+set name ='CCR'
+where name='Creedence Clearwater Revival' ;
+
+2.5 LIKE
+
+Task – Select all invoices with a billing address like “T%”
+Select * from invoices where billing_address like 'T%';
+
+2.6 BETWEEN
+
+Task – Select all invoices that have a total between 15 and 50
+select * from invoices
+  where total <50 and total >15;
+
+Task – Select all employees hired between 1st of June 2003 and 1st of March 2004
+elect * from employees
+  where hire_date >'2003-06-01' and hire_date <'2004-03-01';
+
+2.7 DELETE
+
+Task – Delete a record in Customer table where the name is Robert Walter (There may be constraints that rely on this, find out how to resolve them).
+DELETE FROM invoices WHERE customer_id = 32;
+
+DELETE FROM invoice_lines WHERE invoice_id = 50;
+DELETE FROM invoice_lines WHERE invoice_id = 61;
+DELETE FROM invoice_lines WHERE invoice_id = 116;
+DELETE FROM invoice_lines WHERE invoice_id = 245;
+DELETE FROM invoice_lines WHERE invoice_id = 268;
+DELETE FROM invoice_lines WHERE invoice_id = 290;
+DELETE FROM invoice_lines WHERE invoice_id = 342;
+
+DELETE FROM customers WHERE first_name='Robert' AND last_name = 'Walter';
+
+3 SQL Functions
+3.1 System Defined Functions
+
+
+Task – Create a function that returns the current time.
+Create or replace function current_dates ()
+  returns TIMESTAMP WITH TIME ZONE as $$
+select now();
+$$
+language sql;
+
+Task – create a function that returns the length of a mediatype from the mediatype table
+Create or replace function length_of_media_type (input text)
+  returns INT as $$
+DECLARE
+  num int;
+BEGIN
+   select length(name) into num from media_types where name = input;
+  --raise info 'hello';
+  return num;
+END;
+$$
+language plpgsql;
+
+--select length_of_media_type('AAC audio file');
+
+3.2 System Defined Aggregate Functions
+
+Task – Create a function that returns the average total of all invoices
+Create or replace function avg_of_invoices (input numeric)
+  returns NUMERIC as $$
+DECLARE
+  num numeric;
+BEGIN
+   select avg(unit_price) into num from invoice_lines where unit_price = input;
+  return num;
+END;
+$$
+language plpgsql;
+
+Task – Create a function that returns the most expensive track
+Create or replace function avg_of_invoices ()
+  returns NUMERIC as $$
+DECLARE
+  num numeric;
+BEGIN
+  select num = max(unit_price) from tracks;
+  return num;
+END;
+$$
+language plpgsql;
+
+--select max(unit_price) from tracks;
+
+3.3 User Defined Scalar Functions
+
+Task – Create a function that returns the average price of invoiceline items in the invoiceline table
+Create or replace function avg_price_invoiceline ()
+  returns NUMERIC as $$
+DECLARE
+  num numeric;
+BEGIN
+  select num = avg(unit_price) from invoice_lines;
+  return num;
+END;
+$$
+language plpgsql;
+
+
+--select avg(unit_price) from invoice_lines;
+
+
+3.4 User Defined Table Valued Functions
+
+Task – Create a function that returns all employees who are born after 1968.
+Create or replace function avg_price_invoiceline ()
+  returns NUMERIC as $$
+DECLARE
+  num numeric;
+BEGIN
+  select * from employees where birth_date>'1968-01-01';
+  return * from employees where birth_date>'1968-01-01';
+END;
+$$
+language plpgsql;
+
+
+
+--select * from employees where birth_date>'1968-01-01';
+
+4 Stored Procedures
+
+N/A
+
+5 Transactions (optional)
+
+In this section you will be working with transactions. Transactions are usually nested within a stored procedure.
+
+Task – Create a transaction that given a invoiceId will delete that invoice (There may be constraints that rely on this, find out how to resolve them).
+Task – Create a transaction nested within a stored procedure that inserts a new record in the Customer table
+6 Triggers
+
+In this section you will create various kinds of triggers that work when certain DML statements are executed on a table.
+
+6.1 AFTER/FOR
+
+Task - Create an after insert trigger on the employee table fired after a new record is inserted into the table.
+Create function trigger_new_employee() returns trigger as $$
+begin
+raise notice 'new employee: %', NEW.employee_entry;
+return NEW;
+end; $$ language plpgsql;
+
+create trigger new_employee
+  after INSERT
+  on employees
+for each row
+  execute procedure trigger_new_employee();
+
+Task – Create an after update trigger on the album table that fires after a row is inserted in the table
+Create function trigger_new_row() returns trigger as $$
+begin
+raise notice 'new row: %', NEW.row_entry;
+return NEW;
+end; $$ language plpgsql;
+
+create trigger new_row_in_album
+  after insert
+  on albums
+for each row
+  execute procedure trigger_new_row();
+
+Task – Create an after delete trigger on the customer table that fires after a row is deleted from the table.
+Create function trigger_delete_row() returns trigger as $$
+begin
+raise notice 'deleted entry: %', NEW.deleted_entry;
+return NEW;
+end; $$ language plpgsql;
+
+create trigger deleted_row_customer
+  after delete
+  on customers
+for each row
+  execute procedure trigger_delete_row();
+
+7 Joins
+
+In this section you will be working with combing various tables through the use of joins. You will work with outer, inner, right, left, cross, and self joins.
+
+
+7.1 INNER
+
+Task – Create an inner join that joins customers and orders and specifies the name of the customer and the invoiceId.
+
+select customers.last_name, invoicez.id
+from invoices invoicez
+  inner join customers
+    on support_rep_id = customer_id;
+
+7.2 OUTER
+
+Task – Create an outer join that joins the customer and invoice table, specifying the CustomerId, firstname, lastname, invoiceId, and total.
+-- how do I make the column show alias?
+
+select customers.id, customers.first_name, customers.last_name, invoicez.id, invoicez.total
+from invoices invoicez
+  full outer join customers customers
+    on customers.support_rep_id = invoicez.customer_id;
+
+7.3 RIGHT
+
+Task – Create a right join that joins album and artist specifying artist name and title.
+
+select artists.name, albums.title
+from albums albums
+  right join artists artists
+    on artists.id = albums.artist_id;
+
+7.4 CROSS
+
+Task – Create a cross join that joins album and artist and sorts by artist name in ascending order.
+SELECT *
+  FROM albums
+    cross join artists
+    order by artists.name;
+
+7.5 SELF
+
+Task – Perform a self-join on the employee table, joining on the reportsto column.
+
+SELECT a.reports_to, b.reports_to
+  FROM employees a, employees b
+    WHERE a.reports_to<b.reports_to;
+--?? why would you do this?
